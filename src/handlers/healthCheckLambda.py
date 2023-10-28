@@ -5,13 +5,17 @@ import boto3
 def handler(event, context) -> dict:
     response = {'code': 200}
     try:
-        __handle_queue(response)
+        __handle_sqs(response)
+        __handle_sns(response)
+        __handle_dynamo(response)
+        __handle_s3(response)
+        __handle_lambda(response)
     except:
         response['code'] = 500
     return response
 
 
-def __handle_queue(response) -> None:
+def __handle_sqs(response) -> None:
     try:
         response['sqs'] = {}
         sqs_client = boto3.client('sqs')
@@ -37,3 +41,19 @@ def __handle_queue(response) -> None:
             "reason": str(e)
         }
         raise e
+
+
+def __handle_sns(response) -> None:
+    pass
+
+
+def __handle_dynamo(response) -> None:
+    pass
+
+
+def __handle_s3(response) -> None:
+    pass
+
+
+def __handle_lambda(response) -> None:
+    pass
