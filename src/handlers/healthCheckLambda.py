@@ -3,42 +3,54 @@ import boto3
 
 
 def handler(event, context) -> dict:
-    response = {'code': 200}
+    response = {"code": 200}
     try:
         __handle_sqs(response)
         __handle_sns(response)
         __handle_dynamo(response)
         __handle_s3(response)
         __handle_lambda(response)
-    except:
-        response['code'] = 500
+    except Exception as e:
+        response["code"] = 500
+        if "error" not in response:
+            response["error"] = {
+                "body": "unable to process",
+                "reason": str(e)
+            }
     return response
 
 
 def __handle_sqs(response) -> None:
     try:
-        response['sqs'] = {}
-        sqs_client = boto3.client('sqs')
+        response["sqs"] = {}
+        sqs_client = boto3.client("sqs")
 
         message = sqs_client.send_message(
-            QueueUrl=config.dev.healthCheck_queue_url,
-            DelaySeconds=.25,
+            QueueUrl=config.resources["health_check_queue_url"],
+            DelaySeconds=1,
             MessageAttributes={
-                'body': "I came from the health check lambda"
+                "body": {
+                    "DataType": "String",
+                    "StringValue": "this is a test"
+                }
             },
             MessageBody="This is a test!"
         )
 
         if "messageId" in message:
-            response['sqs'] = {
+            response["sqs"] = {
                 "body": "message sent!",
                 "status": "healthy"
             }
+        else:
+            raise RuntimeError(
+                "No message identifier associated to attempted message")
 
     except Exception as e:
-        response['sqs'] = {
-            'message': "unable to send sqs message",
-            "reason": str(e)
+        response["sqs"] = {
+            "message": "unable to send sqs message",
+            "reason": str(e),
+            "debug": config.resources["health_check_queue_url"]
         }
         raise e
 

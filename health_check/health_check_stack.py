@@ -35,7 +35,9 @@ class HealthCheckStack(Stack):
                                                "src"),
                                            handler="handlers.healthCheckLambda.handler",
                                            runtime=lambda_.Runtime.PYTHON_3_9,
-                                           )
+                                           environment={
+                                               "health_check_queue_url": health_check_queue.queue_url
+                                           })
 
         CfnOutput(self, "queue", value="name={} url={}".format(
             health_check_queue.queue_name, health_check_queue.queue_url))
