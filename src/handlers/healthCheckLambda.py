@@ -21,8 +21,8 @@ def handler(event, context) -> dict:
 
 
 def __handle_sqs(response) -> None:
+    response["sqs"] = {}
     try:
-        response["sqs"] = {}
         sqs_client = boto3.client("sqs")
 
         message = sqs_client.send_message(
@@ -52,7 +52,6 @@ def __handle_sqs(response) -> None:
             "reason": str(e),
             "debug": config.resources["health_check_queue_url"]
         }
-        raise e
 
 
 def __handle_sns(response) -> None:
@@ -60,7 +59,34 @@ def __handle_sns(response) -> None:
 
 
 def __handle_dynamo(response) -> None:
-    pass
+    response["dynamo"] = {}
+    try:
+        dynamo_client = boto3.client("dynamodb")
+
+        item = dynamo_client.get_item(
+            TableName=config.resources["health_check_dynamo_table"],
+            Key={
+                "pk": {
+                    "S": "HealthCheck"
+                }
+            }
+        )
+
+        if "Item" in item:
+            response["dynamo"] = {
+                "message": "Found the item!",
+                "status": "healthy",
+                "item_body": item['Item']['column1']
+            }
+        else:
+            raise LookupError("Unable to featch item from dynamo")
+
+    except Exception as e:
+        response["dynamo"] = {
+            "message": "unable to retrieve dynamo item",
+            "reason": str(e),
+            "debug": config.resources["health_check_dynamo_table"]
+        }
 
 
 def __handle_s3(response) -> None:

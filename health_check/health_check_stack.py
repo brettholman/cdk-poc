@@ -4,8 +4,7 @@ from aws_cdk import (
     aws_sqs as sqs,
     aws_dynamodb as dynamo,
     aws_lambda as lambda_,
-    aws_iam as iam,
-    CfnOutput
+    aws_iam as iam
 )
 from constructs import Construct
 
@@ -36,6 +35,8 @@ class HealthCheckStack(Stack):
         health_check_table = dynamo.Table(
             self,
             "health_table",
+            table_name="dev-{}-{}-healthCheckTable".format(
+                self.region, self.account),
             partition_key=dynamo.Attribute(
                 name="pk",
                 type=dynamo.AttributeType.STRING
@@ -69,9 +70,7 @@ class HealthCheckStack(Stack):
                                            handler="handlers.healthCheckLambda.handler",
                                            runtime=lambda_.Runtime.PYTHON_3_9,
                                            environment={
-                                               "health_check_queue_url": health_check_queue.queue_url
+                                               "health_check_queue_url": health_check_queue.queue_url,
+                                               "health_check_dynamo_table": health_check_table.table_name
                                            },
                                            role=lambda_execution_role)
-
-        CfnOutput(self, "queue", value="name={} url={}".format(
-            health_check_queue.queue_name, health_check_queue.queue_url))
