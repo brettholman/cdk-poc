@@ -37,7 +37,7 @@ def __handle_sqs(response) -> None:
             MessageBody="This is a test!"
         )
 
-        if "messageId" in message:
+        if "MessageId" in message:
             response["sqs"] = {
                 "body": "message sent!",
                 "status": "healthy"

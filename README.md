@@ -4,7 +4,7 @@ The goal of this repository is to spin up a cloud formation stack with AWS CDK w
 
 Resources:
 
-- SQS
+- ~~SQS~~
 - SNS
 - Dynamo
 - S3
