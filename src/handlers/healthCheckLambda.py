@@ -76,7 +76,7 @@ def __handle_dynamo(response) -> None:
             response["dynamo"] = {
                 "message": "Found the item!",
                 "status": "healthy",
-                "item_body": item['Item']['column1']
+                "item_details": item["Item"]["column1"]["S"]
             }
         else:
             raise LookupError("Unable to featch item from dynamo")
