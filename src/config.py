@@ -5,5 +5,8 @@ resources = dict([
      ),
     ("health_check_dynamo_table",
         __os.getenv("health_check_dynamo_table")
+     ),
+    ("health_check_sns_topic",
+        __os.getenv("health_check_sns_topic")
      )
 ])

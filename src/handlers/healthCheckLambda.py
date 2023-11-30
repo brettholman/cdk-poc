@@ -55,7 +55,30 @@ def __handle_sqs(response) -> None:
 
 
 def __handle_sns(response) -> None:
-    pass
+    response["sns"] = {}
+    try:
+        sns_client = boto3.client("sns")
+
+        notification_result = sns_client.publish(
+            TopicArn=config.resources["health_check_sns_topic"],
+            Message="This is a test!"
+        )
+
+        if "MessageId" in notification_result:
+            response["sns"] = {
+                "body": "Notification sent!",
+                "status": "healthy"
+            }
+        else:
+            raise RuntimeError(
+                "No MessageId associated to attempted message")
+
+    except Exception as e:
+        response["sqs"] = {
+            "message": "unable to send sns notification",
+            "reason": str(e),
+            "debug": config.resources["health_check_sns_topic"]
+        }
 
 
 def __handle_dynamo(response) -> None:
