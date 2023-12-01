@@ -7,7 +7,7 @@ Resources:
 - ~~SQS~~
 - ~~SNS~~
 - ~~Dynamo~~
-- S3
+- ~~S3~~
 - Lambda (lambda to lambda connection)
 
 Stretch Goals:

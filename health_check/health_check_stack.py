@@ -6,7 +6,8 @@ from aws_cdk import (
     aws_dynamodb as dynamo,
     aws_lambda as lambda_,
     aws_sns as sns,
-    aws_iam as iam
+    aws_iam as iam,
+    aws_s3 as s3,
 )
 from constructs import Construct
 
@@ -45,7 +46,8 @@ class HealthCheckStack(Stack):
                 name="pk",
                 type=dynamo.AttributeType.STRING
             ),
-            removal_policy=RemovalPolicy.DESTROY
+            removal_policy=RemovalPolicy.DESTROY,
+            billing_mode=dynamo.BillingMode.PAY_PER_REQUEST
         )
 
         dynamo_policy = iam.PolicyDocument(
@@ -74,6 +76,26 @@ class HealthCheckStack(Stack):
             ]
         )
 
+        health_check_s3_bucket = s3.Bucket(
+            self,
+            "health_bucket",
+            bucket_name=self.__create_name("healthcheckbucket"),
+            removal_policy=RemovalPolicy.DESTROY,
+            auto_delete_objects=True,
+        )
+
+        s3_policy = iam.PolicyDocument(
+            statements=[
+                iam.PolicyStatement(
+                    effect=iam.Effect.ALLOW,
+                    actions=["s3:GetObject"],
+                    resources=[
+                        "{}/*".format(health_check_s3_bucket.bucket_arn)
+                    ]
+                )
+            ]
+        )
+
         lambda_execution_role = iam.Role(
             self,
             "lambda_execution_role",
@@ -81,7 +103,8 @@ class HealthCheckStack(Stack):
             inline_policies={
                 "dynamo_read": dynamo_policy,
                 "sqs_send_message": sqs_policy,
-                "sns_publish": sns_policy
+                "sns_publish": sns_policy,
+                "s3_get_object": s3_policy
             }
         )
 
@@ -92,9 +115,11 @@ class HealthCheckStack(Stack):
             code=lambda_.Code.from_asset("src"),
             handler="handlers.healthCheckLambda.handler",
             runtime=lambda_.Runtime.PYTHON_3_9,
+            timeout=Duration.seconds(30),
             environment={
                 "health_check_queue_url": health_check_queue.queue_url,
                 "health_check_dynamo_table": health_check_table.table_name,
-                "health_check_sns_topic": health_check_sns_topic.topic_arn
+                "health_check_sns_topic": health_check_sns_topic.topic_arn,
+                "health_check_s3_bucket": health_check_s3_bucket.bucket_name
             },
             role=lambda_execution_role)

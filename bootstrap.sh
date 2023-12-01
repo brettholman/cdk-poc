@@ -30,6 +30,10 @@ echo "putting dynamo item"
 
 aws dynamodb put-item --table-name dev-us-west-2-102797817500-healthCheckTable --item "{\"pk\": {\"S\": \"HealthCheck\"}, \"column1\": {\"S\": \"Health Check Item\"}}"
 
+echo "putting s3 object"
+
+aws s3 cp ./item.json s3://dev-us-west-2-102797817500-healthcheckbucket
+
 echo invoking the health check lambda... 🤞
 
 aws lambda invoke --function-name healthCheckLambda out.json >> /dev/null

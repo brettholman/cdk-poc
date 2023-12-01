@@ -102,7 +102,7 @@ def __handle_dynamo(response) -> None:
                 "item_details": item["Item"]["column1"]["S"]
             }
         else:
-            raise LookupError("Unable to featch item from dynamo")
+            raise LookupError("Unable to fetch item from dynamo")
 
     except Exception as e:
         response["dynamo"] = {
@@ -113,7 +113,29 @@ def __handle_dynamo(response) -> None:
 
 
 def __handle_s3(response) -> None:
-    pass
+    response["s3"] = {}
+    try:
+        s3_client = boto3.client("s3")
+
+        item = s3_client.get_object(
+            Bucket=config.resources["health_check_s3_bucket"],
+            Key="item.json"
+        )
+        if "Body" in item:
+            response["s3"] = {
+                "message": "Found the item!",
+                "status": "healthy",
+                "item_details": item["Body"].read()
+            }
+        else:
+            raise LookupError("Unable to fetch item from s3")
+
+    except Exception as e:
+        response["s3"] = {
+            "message": "Unable to retrieve s3 item",
+            "reason": str(e),
+            "debug": config.resources["health_check_s3_bucket"]
+        }
 
 
 def __handle_lambda(response) -> None:
